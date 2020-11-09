@@ -1,0 +1,126 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import pickle
+import seaborn as sns
+
+##Temperature prediction by me:)
+dataset = pd.read_csv('Date2021.csv')
+X = dataset[['Month','Year','Day']]
+y = dataset['Temperature']
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import cross_val_score
+
+regressor = RandomForestRegressor(n_estimators=100)
+regressor.fit(X_train, y_train)
+feature_importances = regressor.feature_importances_
+
+X_train_opt = X_train.copy()
+removed_columns = pd.DataFrame()
+models = []
+r2s_opt = []
+
+
+for i in range(0, 5):
+    regressor.fit(X_train_opt, y_train)
+    feature_importances = regressor.feature_importances_
+    accuracies = cross_val_score(estimator=regressor,
+                                 X=X_train_opt,
+                                 y=y_train, cv=5,
+                                 scoring='r2')
+    r2s_opt = np.append(r2s_opt, accuracies.mean())
+    models = np.append(models, ", ".join(list(X_train_opt)))
+
+feature_selection = pd.DataFrame({'Features': models, 'r2 Score': r2s_opt})
+feature_selection.head()
+
+X_train_best = X_train[['Month','Year','Day']]
+X_test_best = X_test[['Month','Year','Day']]
+regressor.fit(X_train_best, y_train)
+pickle.dump(regressor,open('FinalTempmodel.pkl','wb'))
+model = pickle.load(open('FinalTempmodel.pkl','rb'))
+
+accuracies = cross_val_score(estimator = regressor, X = X_train_best,y = y_train, cv = 10, scoring = 'r2')
+accuracy = accuracies.mean()
+print('r2 = {}'.format(accuracy))
+
+from sklearn.metrics import explained_variance_score, mean_squared_error, r2_score
+y_pred = regressor.predict(X_test_best)
+explained_variance_score = explained_variance_score(y_test, y_pred)
+mean_squared_error = mean_squared_error(y_test, y_pred)
+r_squared = r2_score(y_test, y_pred)
+print('explained variance = {}'.format(explained_variance_score))
+print('mse = {}'.format(mean_squared_error))
+print('r2 = {}'.format(r_squared))
+Day  = float(input("Enter Day: "))
+Month  = float(input("Enter Month:  "))
+Year  = float(input("Enter Year:  "))
+result = model.predict([[Month,Year,Day]])
+print("The Temperature and Pressure caused in that day with specific day and time",result)
+
+
+##Radiation Prediction
+dataset = pd.read_csv('Solar Rad.csv')
+X = dataset[['Temperature', 'Pressure', 'Humidity', 'Speed']]
+y = dataset['Radiation']
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import cross_val_score
+
+regressor = RandomForestRegressor(n_estimators=100)
+regressor.fit(X_train, y_train)
+feature_importances = regressor.feature_importances_
+
+X_train_opt = X_train.copy()
+removed_columns = pd.DataFrame()
+models = []
+r2s_opt = []
+
+
+for i in range(0, 5):
+    regressor.fit(X_train_opt, y_train)
+    feature_importances = regressor.feature_importances_
+    accuracies = cross_val_score(estimator=regressor,
+                                 X=X_train_opt,
+                                 y=y_train, cv=5,
+                                 scoring='r2')
+    r2s_opt = np.append(r2s_opt, accuracies.mean())
+    models = np.append(models, ", ".join(list(X_train_opt)))
+
+feature_selection = pd.DataFrame({'Features': models, 'r2 Score': r2s_opt})
+feature_selection.head()
+
+X_train_best = X_train[['Temperature','Pressure', 'Humidity', 'Speed']]
+X_test_best = X_test[['Temperature','Pressure', 'Humidity', 'Speed']]
+regressor.fit(X_train_best, y_train)
+pickle.dump(regressor,open('Finalmodel.pkl','wb'))
+model = pickle.load(open('Finalmodel.pkl','rb'))
+
+accuracies = cross_val_score(estimator = regressor, X = X_train_best,y = y_train, cv = 10, scoring = 'r2')
+accuracy = accuracies.mean()
+print('r2 = {}'.format(accuracy))
+
+from sklearn.metrics import explained_variance_score, mean_squared_error, r2_score
+y_pred = regressor.predict(X_test_best)
+explained_variance_score = explained_variance_score(y_test, y_pred)
+mean_squared_error = mean_squared_error(y_test, y_pred)
+r_squared = r2_score(y_test, y_pred)
+print('explained variance = {}'.format(explained_variance_score))
+print('mse = {}'.format(mean_squared_error))
+print('r2 = {}'.format(r_squared))
+Data  = float(input("Enter date (DDMMYYYY): "))
+Time  = float(input("Enter Time (HH:MM:SS):  "))
+Temperature = float(input("Enter Temperature: "))
+Pressure    = float(input("Enter Pressure: "))
+Humidity    = float(input("Enter Humidity: "))
+Speed       = float(input("Enter Speed : "))
+
+result = model.predict([[Temperature,Pressure, Humidity, Speed]])
+print("The radiation caused in that day with specific day,time,temperture,Presure..etc",result)
